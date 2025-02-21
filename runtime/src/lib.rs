@@ -208,7 +208,7 @@ impl pallet_authorship::Config for Runtime {
 }
 
 parameter_types! {
-	pub const MinimumPeriod: u64 = 5;
+	pub const MinimumPeriod: u64 = 0;
 }
 
 impl pallet_timestamp::Config for Runtime {
