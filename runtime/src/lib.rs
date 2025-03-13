@@ -507,6 +507,7 @@ impl_runtime_apis! {
 		}
 
 		fn gas_price() -> U256 {
+			log::info!("-----gas price");
 			Revive::evm_gas_price()
 		}
 
@@ -623,23 +624,41 @@ impl_runtime_apis! {
 			tx_index: u32,
 			config: pallet_revive::evm::TracerConfig
 		) -> Option<pallet_revive::evm::CallTrace> {
+			log::info!("-----trace_tx called with tx_index {:?}", tx_index);
 			use pallet_revive::tracing::trace;
 			let mut tracer = config.build(Revive::evm_gas_from_weight);
 			let (header, extrinsics) = block.deconstruct();
 
+			log::info!("-----trace_tx found {:?} xts", extrinsics.len());
 			Executive::initialize_block(&header);
+			log::info!("-----trace_tx initialized block");
 			for (index, ext) in extrinsics.into_iter().enumerate() {
+				log::info!("-----trace_tx enumerating {:?}", index);
 				if index as u32 == tx_index {
+					log::info!("-----trace_tx found tx_index {:?}", tx_index);
 					trace(&mut tracer, || {
-						let _ = Executive::apply_extrinsic(ext);
+						log::info!("-----trace_tx applying extrinsic");
+						let res = Executive::apply_extrinsic(ext);
+						log::info!("-----trace_tx after applying extrinsic {:?}", res);
 					});
+						log::info!("-----trace_tx break");
 					break;
 				} else {
-					let _ = Executive::apply_extrinsic(ext);
+						log::info!("-----trace_tx apply extrinsic without tx_index match");
+					let res = Executive::apply_extrinsic(ext);
+						log::info!("-----trace_tx apply extrinsic without tx_index match {:?}", res);
 				}
 			}
+			log::info!("-----trace_tx after loop");
 
-			tracer.collect_traces().pop()
+			let mut traces = tracer.collect_traces();
+			log::info!("-----trace_tx traces.len() {:?}", traces.len());
+			log::info!("-----trace_tx traces {:?}", traces);
+
+			let traces = traces.pop();
+			log::info!("-----trace_tx traces popped {:?}", traces);
+
+			traces
 		}
 
 		fn trace_call(
